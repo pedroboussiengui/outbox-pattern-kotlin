@@ -1,0 +1,11 @@
+ktor:
+  deployment:
+    port: 8080
+  environment: dev
+  application:
+    modules:
+      - org.example.AppKt.module
+database:
+  jdbcUrl: "jdbc:postgresql://localhost:5432/database"
+  user: "postgres"
+  password: "postgres"
