@@ -1,59 +1,59 @@
 package org.example.application
 
-import io.ktor.server.plugins.NotFoundException
+import io.ktor.server.plugins.*
 import kotlinx.serialization.Serializable
 import org.example.BigDecimalSerializer
 import org.example.UUIDSerializer
 import org.example.entity.Transfer
 import org.example.port.AccountRepository
+import org.example.port.TransactionManager
 import org.example.port.TransferRepository
 import java.math.BigDecimal
-import java.util.UUID
+import java.util.*
 
 class TransferUseCase(
     private val accountRepository: AccountRepository,
-    private val transferRepository: TransferRepository
+    private val transferRepository: TransferRepository,
+    private val transferManager: TransactionManager
 ) {
     suspend fun execute(input: Input): Output {
-        val fromAccount = accountRepository.findById(input.fromAccountId)
-        val toAccount = accountRepository.findById(input.toAccountId)
+        return transferManager.run {
+            val accounts = accountRepository.findByIdIn(listOf(input.fromAccountId, input.toAccountId).sorted())
 
-        if (fromAccount == null) {
-            throw NotFoundException("Account with id ${input.fromAccountId} not found")
+            val fromAccount = accounts.find { it.id == input.fromAccountId }
+                ?: throw NotFoundException("Account with ID ${input.fromAccountId} not found")
+
+            val toAccount = accounts.find { it.id == input.toAccountId }
+                ?: throw NotFoundException("Account with ID ${input.toAccountId} not found")
+
+            if (fromAccount.balance < input.amount) {
+                throw IllegalArgumentException("Insufficient funds in account ${input.fromAccountId}")
+            }
+
+            if (fromAccount.currency != toAccount.currency) {
+                throw IllegalArgumentException("Cannot transfer between accounts with different currencies")
+            }
+
+            if (fromAccount.id == toAccount.id) {
+                throw IllegalArgumentException("Cannot transfer to the same account")
+            }
+
+            fromAccount.debit(input.amount)
+            toAccount.credit(input.amount)
+            accountRepository.applyBalanceChange(fromAccount.id, input.amount.negate())
+            accountRepository.applyBalanceChange(toAccount.id, input.amount)
+
+            val transfer = Transfer.create(
+                fromAccountId = fromAccount.id,
+                toAccountId = toAccount.id,
+                amount = input.amount,
+                currency = fromAccount.currency
+            )
+
+            transferRepository.insert(transfer)
+
+            Output(transferId = transfer.id)
         }
-
-        if (toAccount == null) {
-            throw NotFoundException("Account with id ${input.toAccountId} not found")
-        }
-
-        if (fromAccount.balance < input.amount) {
-            throw IllegalArgumentException("Insufficient funds in account ${input.fromAccountId}")
-        }
-
-        if (fromAccount.currency != toAccount.currency) {
-            throw IllegalArgumentException("Cannot transfer between accounts with different currencies")
-        }
-
-        if (fromAccount.id == toAccount.id) {
-            throw IllegalArgumentException("Cannot transfer to the same account")
-        }
-
-        // TODO: Update account balances
-         fromAccount.debit(input.amount)
-         toAccount.credit(input.amount)
-         accountRepository.update(fromAccount)
-         accountRepository.update(toAccount)
-
-        val transfer = Transfer.create(
-            fromAccountId = input.fromAccountId,
-            toAccountId = input.toAccountId,
-            amount = input.amount,
-            currency = fromAccount.currency
-        )
-
-        transferRepository.insert(transfer)
-
-        return Output(transferId = transfer.id)
     }
 
     @Serializable

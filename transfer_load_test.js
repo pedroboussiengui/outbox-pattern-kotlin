@@ -1,0 +1,137 @@
+import http from 'k6/http'
+import { check, sleep } from 'k6'
+import { randomIntBetween } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
+
+export const options = {
+    stages: [
+        { duration: '5s', target: 10 },
+        { duration: '20s', target: 50 },
+        { duration: '5s', target: 0 },
+    ],
+};
+
+const ACCOUNT_IDS = [
+    "c3c03efd-c698-4216-8213-95a62717a79e",
+    "bbfc6739-960b-4895-9961-ce1dd8109bc2",
+    "11877a58-6415-47b1-82e6-c62e6879c46a",
+    "416858bb-caa2-4513-a32c-6248530d1042",
+    "8650d2ac-0787-4ab1-8343-4489ec80a7c6",
+    "5176a67b-bfcc-4d1d-ba32-cd483d197360",
+    "043daea4-da1c-47ff-bba6-0ddc41b28289",
+    "c477a81c-1068-4036-ae9a-a8cb78161c13",
+    "d474027d-fac0-46be-9b8c-c92e95b31bd6",
+    "bb2a270d-1fca-4b3c-81ac-a463370ed37a",
+    "a27cf39a-4908-4c50-a8d8-d2ea75be62a6",
+    "4ea3f9ba-91a9-4330-a114-39080c67cc07",
+    "4ab5fdc4-06d5-470b-b298-d8d7accff192",
+    "9f2b5847-1605-45b0-a4aa-f24ba88e4fc3",
+    "90800304-ffa9-403f-988d-f958e772170a",
+    "e795f50e-1739-48a8-bde4-8107a45354cb",
+    "3acbe91e-744f-41e8-b3d1-00ff606d1729",
+    "e0bdc85d-0a84-4c8c-8e9d-9b6e46829c64",
+    "dae4288f-d2c1-4673-bccf-397dbadc225e",
+    "b097d637-5854-4f84-9e99-fd1cdf3a7dfc",
+    "0b506f50-def2-49e3-aada-01d9963dbd60",
+    "d45ea2bd-25f3-4921-90bf-ef4edf851e92",
+    "af994b1f-fa9d-4a35-97bd-4f1b40bde5d2",
+    "545c42ce-191c-4554-8f3a-a81ad53b80f4",
+    "810251e1-ee2e-40bb-83a2-36ef2ba7f65c",
+    "88da42e7-dc95-4285-8dd2-81d54e57e799",
+    "c1b79d43-52c5-416e-b11f-25f8acfa2f03",
+    "3eb05b96-1429-42a6-9869-eaaf33620a3c",
+    "42e511cd-921c-432a-bc17-22d7fe060af0",
+    "e52d8f2b-eb1e-482e-bf7d-b8f87c0fcf21",
+    "5f2a44f7-608b-4089-bcf0-6a2782164293",
+    "ef0c8060-6225-454a-bb00-3caba70951ef",
+    "de914901-102d-4ee0-aa95-6621245c6043",
+    "01547b2f-1bef-4041-a3c0-6c570b65cf4f",
+    "43b31ab3-1047-49e8-971a-988787cc1e36",
+    "8eba3a0c-fa39-47e1-8d64-db86f6a07cfe",
+    "0609e3f8-1206-4bcb-9cb1-12376e376e24",
+    "a02a0835-6841-4a12-ae8c-b26681e39543",
+    "0c1a2da2-d61b-4001-ab9c-53c089038622",
+    "30aed5ef-ba58-4512-b321-d6362e724382",
+    "05d216a5-1214-4e91-8ccd-3e0b795083e4",
+    "9f68844a-5dde-4aa3-8806-117b2a68fb94",
+    "4bc43cf6-65b4-44a7-a24c-dd85ad9494e3",
+    "c71a9d79-9fec-4fba-be75-aa0aec59ab5e",
+    "ceddfba6-46d0-4701-97ed-8e7b994a4431",
+    "3014d97f-48cb-482c-ac9b-bc56a57ac78c",
+    "38d1f640-368c-48b7-8fd6-7a7abf3c2d86",
+    "5f9c5d5a-274a-4e10-971a-bac26f7ca1e2",
+    "0a89696e-0046-40fe-a041-0cc76db544f2",
+    "5a7511c7-d337-4b32-9652-02f39d8abf2c",
+    "f3e46448-a5f3-418e-88b9-49cb7246e214",
+    "cd2d9e01-8dee-4f05-8364-ab3d78875357",
+    "00c8ce28-e460-4422-952d-d5c3a347de50",
+    "0ad9e413-c933-4f54-9497-b79ebd2e3423",
+    "2347ffd0-2a50-4534-9e70-9fd0e524c907",
+    "569899e5-926f-4039-aac2-2a6782f9a311",
+    "356c5eb2-96aa-4b85-a4a0-5d094d3ea9bf",
+    "0d96060c-e07b-44c7-bfc7-8ab68dc9b723",
+    "a3e492c8-739a-48c2-b510-ad6a1d335c13",
+    "be2a5e04-ed6e-4b0c-a3ec-057f3a64814b",
+    "fc12b93d-c70f-4a68-b912-3095cbcf08d6",
+    "388de031-0d83-46c8-aa9e-84df8b4883b8",
+    "e6a8e0fe-e361-461d-97c0-d41d47ab79f3",
+    "38bb70ed-2d76-4a84-8f3a-ee564805b47d",
+    "fc633dae-f068-45d6-a549-e2fea30160c2",
+    "8bda25c8-5ad6-487d-9942-c95360c00025",
+    "b10c57bd-9e5d-4e07-a49c-bea53ceee4ce",
+    "78832f12-a006-4a26-a80c-cc07c23aa81b",
+    "2adf0c0b-7aeb-4fe6-b120-69ceb25dd0da",
+    "7a9725c8-6557-4302-9334-5686c67097b6",
+    "f76e0571-53fb-4adf-8c36-ed852dc1021b",
+    "7a2ba034-8c04-4598-b064-ed3be9193f05",
+    "6c74b02d-6bfd-47f3-89b7-eefd7a8c2981",
+    "e442cfff-c925-4bbe-af11-5907fc7e04cf",
+    "af93309e-571e-490b-9db5-cf03c1e7e64c",
+    "1476f927-5263-4ccf-abe8-d915bd1b87ef",
+    "b0a61480-ccfc-46cf-87d1-211f205ab9be",
+    "cefb8956-a3f7-412a-a4d6-85f519a7c7e9",
+    "f062a2db-bc6a-4f22-b555-8ffab1b8dc2f",
+    "8249702d-b413-4bf7-93d0-cefed8919acd",
+    "2186f0ea-2031-4b76-942e-b73a3358e39c",
+    "8b73c7b8-c7e2-40b2-ac72-a70685dd23ce",
+    "3953c148-ff3a-4318-ab34-f1cd6c733421",
+    "aadd1f02-6bc9-43cd-9d2e-d379117a61ab",
+    "0eb30341-f9d5-49bf-9ba9-29f3bfe4143c",
+    "dd2a8cad-a9f1-4e52-a555-7fb768448c63",
+    "15f5d348-a2f7-45e2-a3e5-ba9a3fa23c02",
+    "7489cf94-748f-42e3-a33b-ccd306d75c6e",
+    "3615b12f-4534-4dfe-a178-f67961584700",
+    "4c6148f8-910c-47d0-a5c7-4ae73c2a4f98",
+    "26fb745a-1147-45ac-8db9-40d248dd36fd",
+    "2a27c11c-3654-46d2-8e82-f204555c9c04",
+    "e223412d-dec3-4e33-a06d-f772a680f3c9",
+    "afc30afb-82c5-4f0d-a3fd-de5ae46be1bc",
+    "a71f1e6c-a8c9-4bb2-9f3f-61a3b4ba8285",
+    "d2fe2e83-31e6-4c30-8d27-fa4f9fe4773b",
+    "45e2f784-eb82-41bc-b62d-9d286fb4e11c",
+    "502b8243-763e-4850-be3d-7cf0d99cbd80",
+    "8b897799-52bc-4dcf-a9e2-701ac56bb501",
+    "08711b5b-0b94-4afe-8c3b-3d0c95edec62",
+]
+
+const BASE_URL = 'http://localhost:8080';
+
+export default function () {
+    let fromAccountIdIndex = randomIntBetween(0, ACCOUNT_IDS.length - 1);
+    let toAccountIdIndex = randomIntBetween(0, ACCOUNT_IDS.length - 1);
+
+    const payload = JSON.stringify({
+        fromAccountId: ACCOUNT_IDS[fromAccountIdIndex],
+        toAccountId: ACCOUNT_IDS[toAccountIdIndex],
+        amount: "10.00"
+    });
+
+    const params = {
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    };
+
+    http.post(`${BASE_URL}/transfers`, payload, params);
+
+    sleep(0.1);
+}

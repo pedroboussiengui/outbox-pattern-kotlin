@@ -1,5 +1,6 @@
 package org.example.unit.application
 
+import io.ktor.server.plugins.NotFoundException
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -8,6 +9,7 @@ import org.example.application.TransferUseCase
 import org.example.entity.Account
 import org.example.entity.Currency
 import org.example.port.AccountRepository
+import org.example.port.TransactionManager
 import org.example.port.TransferRepository
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -24,20 +26,26 @@ class TransferUseCaseTest {
         //arrange
         val mockAccountRepository = mockk<AccountRepository>()
         val mockTransferRepository = mockk<TransferRepository>()
+        val mockTransactionManager = mockk<TransactionManager>()
 
-        coEvery { mockAccountRepository.findById(UUID.fromString("123e4567-e89b-12d3-a456-426614174000")) }.returns(
+        coEvery { mockTransactionManager.run<Any>(any()) } coAnswers {
+            firstArg<suspend () -> Any>().invoke()
+        }
+
+        val fromAccountId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+        val toAccountId = UUID.fromString("123e4567-e89b-12d3-a456-426614174001")
+
+        coEvery { mockAccountRepository.findByIdIn(listOf(fromAccountId, toAccountId)) } returns listOf(
             Account(
-                id = UUID.fromString("123e4567-e89b-12d3-a456-426614174000"),
+                id = fromAccountId,
                 name = "Test Account 1",
                 balance = BigDecimal("1000.00"),
                 currency = Currency.BRL,
                 createdAt = LocalDateTime.now(),
                 updatedAt = null
-            )
-        )
-        coEvery { mockAccountRepository.findById(UUID.fromString("123e4567-e89b-12d3-a456-426614174001")) }.returns(
+            ),
             Account(
-                id = UUID.fromString("123e4567-e89b-12d3-a456-426614174001"),
+                id = toAccountId,
                 name = "Test Account 2",
                 balance = BigDecimal("1000.00"),
                 currency = Currency.BRL,
@@ -48,11 +56,11 @@ class TransferUseCaseTest {
         coEvery { mockAccountRepository.update(any()) } returns Unit
         coEvery { mockTransferRepository.insert(any()) } returns Unit
 
-        val transferUseCase = TransferUseCase(mockAccountRepository, mockTransferRepository)
+        val transferUseCase = TransferUseCase(mockAccountRepository, mockTransferRepository, mockTransactionManager)
 
         val input = TransferUseCase.Input(
-            fromAccountId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000"),
-            toAccountId = UUID.fromString("123e4567-e89b-12d3-a456-426614174001"),
+            fromAccountId = fromAccountId,
+            toAccountId = toAccountId,
             amount = BigDecimal("100.00")
         )
 
@@ -61,7 +69,7 @@ class TransferUseCaseTest {
 
         //assert
         assertNotNull(output.transferId)
-        coVerify(exactly = 2) { mockAccountRepository.findById(any()) }
+        coVerify(exactly = 1) { mockAccountRepository.findByIdIn(any()) }
         coVerify(exactly = 2) { mockAccountRepository.update(any()) }
         coVerify(exactly = 1) { mockTransferRepository.insert(any()) }
     }
@@ -71,20 +79,26 @@ class TransferUseCaseTest {
         //arrange
         val mockAccountRepository = mockk<AccountRepository>()
         val mockTransferRepository = mockk<TransferRepository>()
+        val mockTransactionManager = mockk<TransactionManager>()
 
-        coEvery { mockAccountRepository.findById(UUID.fromString("123e4567-e89b-12d3-a456-426614174000")) }.returns(
+        coEvery { mockTransactionManager.run<Any>(any()) } coAnswers {
+            firstArg<suspend () -> Any>().invoke()
+        }
+
+        val fromAccountId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+        val toAccountId = UUID.fromString("123e4567-e89b-12d3-a456-426614174001")
+
+        coEvery { mockAccountRepository.findByIdIn(listOf(fromAccountId, toAccountId)) } returns listOf(
             Account(
-                id = UUID.fromString("123e4567-e89b-12d3-a456-426614174000"),
+                id = fromAccountId,
                 name = "Test Account 1",
                 balance = BigDecimal("50.00"),
                 currency = Currency.BRL,
                 createdAt = LocalDateTime.now(),
                 updatedAt = null
-            )
-        )
-        coEvery { mockAccountRepository.findById(UUID.fromString("123e4567-e89b-12d3-a456-426614174001")) }.returns(
+            ),
             Account(
-                id = UUID.fromString("123e4567-e89b-12d3-a456-426614174001"),
+                id = toAccountId,
                 name = "Test Account 2",
                 balance = BigDecimal("1000.00"),
                 currency = Currency.BRL,
@@ -93,11 +107,11 @@ class TransferUseCaseTest {
             )
         )
 
-        val transferUseCase = TransferUseCase(mockAccountRepository, mockTransferRepository)
+        val transferUseCase = TransferUseCase(mockAccountRepository, mockTransferRepository, mockTransactionManager)
 
         val input = TransferUseCase.Input(
-            fromAccountId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000"),
-            toAccountId = UUID.fromString("123e4567-e89b-12d3-a456-426614174001"),
+            fromAccountId = fromAccountId,
+            toAccountId = toAccountId,
             amount = BigDecimal("100.00")
         )
 
@@ -108,7 +122,7 @@ class TransferUseCaseTest {
 
         //assert
         assertEquals("Insufficient funds in account 123e4567-e89b-12d3-a456-426614174000", exception.message)
-        coVerify(exactly = 2) { mockAccountRepository.findById(any()) }
+        coVerify(exactly = 1) { mockAccountRepository.findByIdIn(any()) }
         coVerify(exactly = 0) { mockAccountRepository.update(any()) }
         coVerify(exactly = 0) { mockTransferRepository.insert(any()) }
     }
@@ -118,26 +132,33 @@ class TransferUseCaseTest {
         //arrange
         val mockAccountRepository = mockk<AccountRepository>()
         val mockTransferRepository = mockk<TransferRepository>()
+        val mockTransactionManager = mockk<TransactionManager>()
 
-        coEvery { mockAccountRepository.findById(UUID.fromString("123e4567-e89b-12d3-a456-426614174000")) }.returns(null)
-        coEvery { mockAccountRepository.findById(UUID.fromString("123e4567-e89b-12d3-a456-426614174001")) }.returns(mockk())
+        coEvery { mockTransactionManager.run<Any>(any()) } coAnswers {
+            firstArg<suspend () -> Any>().invoke()
+        }
 
-        val transferUseCase = TransferUseCase(mockAccountRepository, mockTransferRepository)
+        val fromAccountId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+        val toAccountId = UUID.fromString("123e4567-e89b-12d3-a456-426614174001")
+
+        coEvery { mockAccountRepository.findByIdIn(listOf(fromAccountId, toAccountId)) } returns listOf()
+
+        val transferUseCase = TransferUseCase(mockAccountRepository, mockTransferRepository, mockTransactionManager)
 
         val input = TransferUseCase.Input(
-            fromAccountId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000"),
-            toAccountId = UUID.fromString("123e4567-e89b-12d3-a456-426614174001"),
+            fromAccountId = fromAccountId,
+            toAccountId = toAccountId,
             amount = BigDecimal("100.00")
         )
 
         //act
-        val exception = assertFailsWith<IllegalArgumentException> {
+        val exception = assertFailsWith<NotFoundException> {
             transferUseCase.execute(input)
         }
 
         //assert
-        assertEquals("Account with id 123e4567-e89b-12d3-a456-426614174000 not found", exception.message)
-        coVerify(exactly = 2) { mockAccountRepository.findById(any()) }
+        assertEquals("Account with ID 123e4567-e89b-12d3-a456-426614174000 not found", exception.message)
+        coVerify(exactly = 1) { mockAccountRepository.findByIdIn(any()) }
         coVerify(exactly = 0) { mockAccountRepository.update(any()) }
         coVerify(exactly = 0) { mockTransferRepository.insert(any()) }
     }

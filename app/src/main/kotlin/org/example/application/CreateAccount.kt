@@ -6,20 +6,24 @@ import org.example.UUIDSerializer
 import org.example.entity.Account
 import org.example.entity.Currency
 import org.example.port.AccountRepository
+import org.example.port.TransactionManager
 import java.math.BigDecimal
 import java.util.UUID
 
 class CreateAccount(
-    private val accountRepository: AccountRepository
+    private val accountRepository: AccountRepository,
+    private val transactionManager: TransactionManager
 ) {
     suspend fun execute(input: Input): Output {
-        val account = Account.create(
-            name = input.name,
-            currency = input.currency,
-            initialBalance = input.initialBalance
-        )
-        accountRepository.insert(account)
-        return Output(accountId = account.id)
+        return transactionManager.run {
+            val account = Account.create(
+                name = input.name,
+                currency = input.currency,
+                initialBalance = input.initialBalance
+            )
+            accountRepository.insert(account)
+            Output(accountId = account.id)
+        }
     }
 
     @Serializable

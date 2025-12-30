@@ -1,23 +1,22 @@
 package org.example
 
-import ch.qos.logback.classic.LoggerContext
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 import org.example.application.CreateAccount
 import org.example.application.GetAccountById
 import org.example.application.TransferUseCase
 import org.example.database.AccountRepositoryImpl
+import org.example.database.ExposedTransactionManager
 import org.example.database.OutboxRepositoryImpl
 import org.example.database.TransferRepositoryImpl
 import org.example.entity.AccountModel
@@ -27,25 +26,31 @@ import org.example.entity.TransferModel
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.slf4j.LoggerFactory
-import java.util.UUID
+import java.util.*
 
 fun main(args: Array<String>) {
-    val ctx = LoggerFactory.getILoggerFactory() as LoggerContext
-    ctx.getLogger("Exposed").level = ch.qos.logback.classic.Level.INFO
     io.ktor.server.netty.EngineMain.main(args)
 }
 
 fun Application.module() {
-    Database.connect(
-        url = environment.config.property("database.jdbcUrl").getString(),
-        driver = "org.postgresql.Driver",
-        user = environment.config.property("database.user").getString(),
+    val config = HikariConfig().apply {
+        jdbcUrl = environment.config.property("database.jdbcUrl").getString()
+        driverClassName = "org.postgresql.Driver"
+        username = environment.config.property("database.user").getString()
         password = environment.config.property("database.password").getString()
-    )
+        maximumPoolSize = 20
+        isAutoCommit = false
+        transactionIsolation = "TRANSACTION_READ_COMMITTED" // assure forupdate
+        validate()
+    }
+    val dataSource = HikariDataSource(config)
+    Database.connect(dataSource)
     transaction {
-        SchemaUtils.drop(TransferModel, OutboxModel)
+        SchemaUtils.drop(AccountModel, TransferModel, OutboxModel)
         SchemaUtils.create(AccountModel, TransferModel, OutboxModel)
+    }
+    install(CallLogging) {
+        level = org.slf4j.event.Level.INFO
     }
     install(ContentNegotiation) {
         json(Json {
@@ -61,9 +66,10 @@ fun Application.module() {
 fun Application.configureRouting() {
     val accountRepository = AccountRepositoryImpl()
     val transferRepository = TransferRepositoryImpl()
-    val transferUseCase = TransferUseCase(accountRepository, transferRepository)
-    val createAccount = CreateAccount(accountRepository)
-    val getAccountById = GetAccountById(accountRepository)
+    val transactionManager = ExposedTransactionManager()
+    val transferUseCase = TransferUseCase(accountRepository, transferRepository, transactionManager)
+    val createAccount = CreateAccount(accountRepository, transactionManager)
+    val getAccountById = GetAccountById(accountRepository, transactionManager)
 
     routing {
         route("/accounts") {
@@ -98,7 +104,7 @@ fun Application.startOutboxWorker() {
 
     scope.launch {
         while (true) {
-            val outboxEvents = outboxRepository.fetchBatch(2)
+            val outboxEvents = outboxRepository.fetchBatch(50)
             outboxEvents.forEach { event ->
                 try {
                     publisher.publish(event)

@@ -1,0 +1,53 @@
+2025-12-30 15:32:59.024 [main] INFO  Application - Autoreload is disabled because the development mode is off.
+2025-12-30 15:32:59.145 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2025-12-30 15:32:59.355 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@4393593c
+2025-12-30 15:32:59.356 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2025-12-30 15:32:59.500 [main] INFO  Application - Application started in 0.596 seconds.
+2025-12-30 15:32:59.605 [DefaultDispatcher-worker-1] INFO  Application - Responding at http://0.0.0.0:8080
+2025-12-30 15:33:04.795 [DefaultDispatcher-worker-1] INFO  Application - [32m201 Created[m: [36mPOST[m - /accounts in 80ms
+2025-12-30 15:34:12.574 [DefaultDispatcher-worker-1] INFO  Application - [32m201 Created[m: [36mPOST[m - /accounts in 8ms
+2025-12-30 15:34:15.721 [DefaultDispatcher-worker-1] INFO  Application - [31m400 Bad Request[m: [36mPOST[m - /accounts in 37ms
+2025-12-30 15:37:04.865 [eventLoopGroupProxy-3-2] WARN  io.netty.util.concurrent.AbstractEventExecutor - A task raised an exception. Task: io.netty.channel.AbstractChannel$AbstractUnsafe$8@135c8322
+java.util.concurrent.RejectedExecutionException: event executor terminated
+	at io.netty.util.concurrent.SingleThreadEventExecutor.reject(SingleThreadEventExecutor.java:1123)
+	at io.netty.util.concurrent.SingleThreadEventExecutor.offerTask(SingleThreadEventExecutor.java:413)
+	at io.netty.util.concurrent.SingleThreadEventExecutor.addTask(SingleThreadEventExecutor.java:406)
+	at io.netty.util.concurrent.SingleThreadEventExecutor.execute(SingleThreadEventExecutor.java:1025)
+	at io.netty.util.concurrent.SingleThreadEventExecutor.execute0(SingleThreadEventExecutor.java:991)
+	at io.netty.util.concurrent.SingleThreadEventExecutor.execute(SingleThreadEventExecutor.java:981)
+	at io.netty.channel.DefaultChannelPipeline.destroyUp(DefaultChannelPipeline.java:816)
+	at io.netty.channel.DefaultChannelPipeline.destroy(DefaultChannelPipeline.java:801)
+	at io.netty.channel.DefaultChannelPipeline.access$700(DefaultChannelPipeline.java:45)
+	at io.netty.channel.DefaultChannelPipeline$HeadContext.channelUnregistered(DefaultChannelPipeline.java:1411)
+	at io.netty.channel.DefaultChannelPipeline.fireChannelUnregistered(DefaultChannelPipeline.java:780)
+	at io.netty.channel.AbstractChannel$AbstractUnsafe$8.run(AbstractChannel.java:692)
+	at io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:148)
+	at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:141)
+	at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:535)
+	at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:201)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1193)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2025-12-30 15:37:04.865 [eventLoopGroupProxy-3-4] WARN  io.netty.util.concurrent.AbstractEventExecutor - A task raised an exception. Task: io.netty.channel.AbstractChannel$AbstractUnsafe$8@634703f5
+java.util.concurrent.RejectedExecutionException: event executor terminated
+	at io.netty.util.concurrent.SingleThreadEventExecutor.reject(SingleThreadEventExecutor.java:1123)
+	at io.netty.util.concurrent.SingleThreadEventExecutor.offerTask(SingleThreadEventExecutor.java:413)
+	at io.netty.util.concurrent.SingleThreadEventExecutor.addTask(SingleThreadEventExecutor.java:406)
+	at io.netty.util.concurrent.SingleThreadEventExecutor.execute(SingleThreadEventExecutor.java:1025)
+	at io.netty.util.concurrent.SingleThreadEventExecutor.execute0(SingleThreadEventExecutor.java:991)
+	at io.netty.util.concurrent.SingleThreadEventExecutor.execute(SingleThreadEventExecutor.java:981)
+	at io.netty.channel.DefaultChannelPipeline.destroyUp(DefaultChannelPipeline.java:816)
+	at io.netty.channel.DefaultChannelPipeline.destroy(DefaultChannelPipeline.java:801)
+	at io.netty.channel.DefaultChannelPipeline.access$700(DefaultChannelPipeline.java:45)
+	at io.netty.channel.DefaultChannelPipeline$HeadContext.channelUnregistered(DefaultChannelPipeline.java:1411)
+	at io.netty.channel.DefaultChannelPipeline.fireChannelUnregistered(DefaultChannelPipeline.java:780)
+	at io.netty.channel.AbstractChannel$AbstractUnsafe$8.run(AbstractChannel.java:692)
+	at io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:148)
+	at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:141)
+	at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:535)
+	at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:201)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1193)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:1583)

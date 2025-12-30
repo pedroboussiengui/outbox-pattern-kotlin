@@ -16,12 +16,12 @@ class AccountTest {
         val account = Account.create(
             name = "Test Account",
             currency = Currency.BRL,
-            initialBalance = BigDecimal(100.0)
+            initialBalance = BigDecimal("100.00")
         )
         assertNotNull(account.id)
         assertEquals("Test Account", account.name)
         assertEquals(Currency.BRL, account.currency)
-        assertEquals(BigDecimal(100.0), account.balance)
+        assertEquals(BigDecimal("100.00"), account.balance)
         assertNotNull(account.createdAt)
         assertNull(account.updatedAt)
     }
@@ -31,10 +31,10 @@ class AccountTest {
         val account = Account.create(
             name = "Test Account",
             currency = Currency.BRL,
-            initialBalance = BigDecimal(100.0)
+            initialBalance = BigDecimal("100.00")
         )
-        account.debit(BigDecimal(50.0))
-        assertEquals(BigDecimal(50.0), account.balance)
+        account.debit(BigDecimal("50.00"))
+        assertEquals(BigDecimal("50.00"), account.balance)
         assertNotNull(account.updatedAt)
     }
 
@@ -43,10 +43,10 @@ class AccountTest {
         val account = Account.create(
             name = "Test Account",
             currency = Currency.BRL,
-            initialBalance = BigDecimal(100.0)
+            initialBalance = BigDecimal("100.00")
         )
         val exception = assertThrows<IllegalArgumentException> {
-            account.debit(BigDecimal(150.0))
+            account.debit(BigDecimal("150.00"))
         }
         assertEquals("Insufficient funds", exception.message)
     }
@@ -56,10 +56,10 @@ class AccountTest {
         val account = Account.create(
             name = "Test Account",
             currency = Currency.BRL,
-            initialBalance = BigDecimal(100.0)
+            initialBalance = BigDecimal("100.00")
         )
-        account.credit(BigDecimal(50.0))
-        assertEquals(BigDecimal(150.0), account.balance)
+        account.credit(BigDecimal("50.00"))
+        assertEquals(BigDecimal("150.00"), account.balance)
         assertNotNull(account.updatedAt)
     }
 }

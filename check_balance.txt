@@ -1,0 +1,7 @@
+-- Soma total (tem que ser igual ao início)
+select sum(balance) as total_balance from account ;
+
+-- Nenhuma conta pode estar negativa
+SELECT * FROM account WHERE balance < 0;
+
+SELECT status, COUNT(*) FROM outbox GROUP BY status;

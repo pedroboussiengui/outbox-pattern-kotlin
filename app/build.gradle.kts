@@ -44,6 +44,7 @@ dependencies {
     implementation("io.ktor:ktor-server-call-logging:3.3.3")
     implementation("io.ktor:ktor-serialization-kotlinx-json:3.3.3")
     implementation("io.ktor:ktor-server-config-yaml-jvm:3.3.3")
+    implementation("io.ktor:ktor-server-call-logging:3.3.3")
 
     implementation("ch.qos.logback:logback-classic:1.5.22")
 
@@ -56,7 +57,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-java-time:1.0.0-beta-1")
     implementation("org.jetbrains.exposed:exposed-money:1.0.0-beta-1")
     implementation("org.postgresql:postgresql:42.7.8")
-    implementation("org.xerial:sqlite-jdbc:3.51.1.0")
+    implementation("com.zaxxer:HikariCP:7.0.2")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
